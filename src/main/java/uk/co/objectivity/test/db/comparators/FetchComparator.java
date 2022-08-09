@@ -56,7 +56,8 @@ public class FetchComparator extends Comparator {
         CmpSqlResultsConfig cmpSqlResultsConfig = testParams.getCmpSqlResultsConfig();
         CmpSqlResultsTest cmpSqlResultsTest = testParams.getCmpSqlResultsTest();
 
-        // (get(0)/get(1) - IndexOutOfBoundsException) checked in TestDataProvider, but still - schema would be nice!
+        // (get(0)/get(1) - IndexOutOfBoundsException) checked in TestDataProvider, but
+        // still - schema would be nice!
         Sql sql1 = cmpSqlResultsTest.getCompare().getSqls().get(0);
         Sql sql2 = cmpSqlResultsTest.getCompare().getSqls().get(1);
 
@@ -78,14 +79,15 @@ public class FetchComparator extends Comparator {
             connection2 = DataSource.getConnection(datasource2.getName());
             return getTestResults(connection1, connection2, testParams);
         } catch (Exception e) {
-            throw new Exception(e+"\nQuery 1: " + sql1.getSql()+"\nQuery 2: " + sql2.getSql());
+            throw new Exception(e + "\nQuery 1: " + sql1.getSql() + "\nQuery 2: " + sql2.getSql());
         } finally {
             DataSource.closeConnection(connection1);
             DataSource.closeConnection(connection2);
         }
     }
 
-    private TestResults getTestResults(Connection connection1, Connection connection2, TestParams testParams) throws Exception {
+    private TestResults getTestResults(Connection connection1, Connection connection2, TestParams testParams)
+            throws Exception {
         Compare compare = testParams.getCmpSqlResultsTest().getCompare();
         PreparedStatement stmt1 = null;
         PreparedStatement stmt2 = null;
@@ -100,19 +102,19 @@ public class FetchComparator extends Comparator {
             Sql sql1 = compare.getSqls().get(0);
             Sql sql2 = compare.getSqls().get(1);
 
-            stmt1 = connection1.prepareStatement(sql1.getSql(), ResultSet.TYPE_FORWARD_ONLY, ResultSet
-                    .CONCUR_READ_ONLY);
+            stmt1 = connection1.prepareStatement(sql1.getSql(), ResultSet.TYPE_FORWARD_ONLY,
+                    ResultSet.CONCUR_READ_ONLY);
             stmt1.setFetchSize(compare.getFetchSize());
-            stmt2 = connection2.prepareStatement(sql2.getSql(), ResultSet.TYPE_FORWARD_ONLY, ResultSet
-                    .CONCUR_READ_ONLY);
+            stmt2 = connection2.prepareStatement(sql2.getSql(), ResultSet.TYPE_FORWARD_ONLY,
+                    ResultSet.CONCUR_READ_ONLY);
             stmt2.setFetchSize(compare.getFetchSize());
 
-            savedTimes1.startMeasure("Fetch 1 "+ sql1.getDatasourceName());
+            savedTimes1.startMeasure("Fetch 1 " + sql1.getDatasourceName());
             ResultSet result1 = stmt1.executeQuery();
             savedTimes1.stopMeasure();
             savedTimesList.add(savedTimes1);
 
-            savedTimes2.startMeasure("Fetch 2 "+ sql2.getDatasourceName());
+            savedTimes2.startMeasure("Fetch 2 " + sql2.getDatasourceName());
             ResultSet result2 = stmt2.executeQuery();
             savedTimes2.stopMeasure();
             savedTimesList.add(savedTimes2);
@@ -131,10 +133,11 @@ public class FetchComparator extends Comparator {
                     ", Chunk size: " + compare.getChunk() +
                     ", Difftable size: " + compare.getDiffTableSize() +
                     ", Delta : " + compare.getDelta() +
-                    ", File output: " + compare.isFileOutputOn() + "\r\n"+
-                    "Time execution of queries:\n"+
-                    savedTimes1.getMeasureType() + " " + savedTimes1.getFormattedDuration()+
-                    savedTimes2.getMeasureType() + " " +  savedTimes2.getFormattedDuration();
+                    ", File output: " + compare.isFileOutputOn() +
+                    ", Show names: " + compare.isShowNames() + "\r\n" +
+                    "Time execution of queries:\n" +
+                    savedTimes1.getMeasureType() + " " + savedTimes1.getFormattedDuration() +
+                    savedTimes2.getMeasureType() + " " + savedTimes2.getFormattedDuration();
             TestResults testResults = new TestResults(executedQuery, -1);
 
             // building columns
@@ -154,6 +157,10 @@ public class FetchComparator extends Comparator {
                 src2PWriter = new PrintWriter(
                         getNewFileBasedOnTestConfigFile(testParams.getTestConfigFile(), "_sql2.csv"));
             }
+            // add names of columns in first table
+            if (compare.isShowNames()) {
+                writeRowAsCSV(diffPWriter, columns);
+            }
             List<List<String>> rows = new ArrayList<>();
             int chunk = compare.getChunk();
             int rowNmb = 0;
@@ -170,19 +177,23 @@ public class FetchComparator extends Comparator {
                     Object value1 = rs1NotEmpty ? result1.getObject(column) : null;
                     Object value2 = rs2NotEmpty ? result2.getObject(column) : null;
                     // we want NULL to be displayed (to distinguish it from the empty string)
-                    if (value1 == null) value1 = "<NULL>";
-                    if (value2 == null) value2 = "<NULL>";
+                    if (value1 == null)
+                        value1 = "<NULL>";
+                    if (value2 == null)
+                        value2 = "<NULL>";
 
                     if (!equal(value1, value2, compare.getDelta())) {
                         isRowDiff = true;
-                        value1="<DIFF>" +value1;
-                        value2="<DIFF>" +value2;
+                        value1 = "<DIFF>" + value1;
+                        value2 = "<DIFF>" + value2;
                     }
                     row1.add(value1.toString());
                     row2.add(value2.toString());
                 }
-                if (rs1NotEmpty) writeRowAsCSV(src1PWriter, row1, true);
-                if (rs2NotEmpty) writeRowAsCSV(src2PWriter, row2, true);
+                if (rs1NotEmpty)
+                    writeRowAsCSV(src1PWriter, row1, true);
+                if (rs2NotEmpty)
+                    writeRowAsCSV(src2PWriter, row2, true);
                 if (isRowDiff) {
                     diffCounter++;
                     if (diffCounter <= compare.getDiffTableSize()) {
@@ -203,7 +214,7 @@ public class FetchComparator extends Comparator {
             testResults.setNmbOfComparedRows(rowNmb);
             savedTimes1.setNumberOfComparedRows(String.valueOf(rowNmb));
             savedTimes2.setNumberOfComparedRows(String.valueOf(rowNmb));
-            if(diffCounter==0){
+            if (diffCounter == 0) {
                 savedTimes1.setTestResult("Passed");
                 savedTimes2.setTestResult("Passed");
             }

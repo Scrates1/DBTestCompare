@@ -8,10 +8,11 @@
 		<!--<include>fetch_compare_test.inline_sql_MySQL_PostgreSQL</include>
 		<include>compare_with_file</include>
         <include>delta</include>-->
+        <include>fetch_my</include>
 
         <!-- categories/directories or test files which you want to exclude (from those included). You can use many
-        (or none) exclude elements. -->
-        <exclude>cube</exclude>
+        (or none) exclude elements. 
+        <exclude>cube</exclude>-->
     </filter>
 
     <!-- min:1 max:unchecked (be careful!) -->
@@ -23,6 +24,7 @@
     <datasources>
         <!-- If number of threads will be greater than maxPollSize, thread will wait for connection. Don't forget it is
         somehow related! -->
+
         <datasource maxPollSize="6">
             <name>TERADATA_SERVER</name>
             <driver>com.teradata.jdbc.TeraDriver</driver>
@@ -72,5 +74,21 @@
             <user>${USERNAME}</user>
             <password>${PASSWORD}</password>            
 		</datasource>
+
     </datasources>
+        <!-- to replace the value in template:
+        replaceOn       - boolean value - if true templates will be replaced using freemarker
+
+
+    -->
+    <template replaceOn="true">
+        <replace>
+            <name>uat_contno</name>
+            <value>003182</value>
+        </replace>
+        <replace>
+            <name>mptest_contno</name>
+            <value>000000</value>
+        </replace>
+    </template>
 </cmpSqlResultsConfig>

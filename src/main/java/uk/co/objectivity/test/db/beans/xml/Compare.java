@@ -57,6 +57,9 @@ public class Compare {
     private boolean fileOutputOn = false;
 
     @XmlAttribute
+    private boolean showNames = true;
+
+    @XmlAttribute
     private String keyColumns = null;
 
     @XmlAttribute
@@ -136,6 +139,14 @@ public class Compare {
 
     public void setFileOutputOn(boolean fileOutputOn) {
         this.fileOutputOn = fileOutputOn;
+    }
+
+    public boolean isShowNames() {
+        return showNames;
+    }
+
+    public void setShowNames(boolean showNames) {
+        this.showNames = showNames;
     }
 
     public String getKeyColumns() {

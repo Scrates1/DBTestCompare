@@ -17,6 +17,11 @@
         <poi.version>4.1.1</poi.version>
         <commons.version>3.9</commons.version>
         <sirocco.version>1.0</sirocco.version>
+        <ojdbc.version>21.6.0.0.1</ojdbc.version>
+        <freemarker.version>2.3.31</freemarker.version>
+
+
+
     </properties>
 
     <build>
@@ -111,6 +116,16 @@
             <artifactId>commons-lang3</artifactId>
             <version>${commons.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.oracle</groupId>
+            <artifactId>ojdbc8</artifactId>
+            <version>${ojdbc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.freemarker</groupId>
+            <artifactId>freemarker</artifactId>
+            <version>${freemarker.version}</version>
+          </dependency>
     </dependencies>
+    
 </project>
-

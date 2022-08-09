@@ -39,6 +39,17 @@ public class CmpSqlResultsConfig {
     private Filter filter = new Filter();
 
     private int testFailureExitCode = 0;
+    
+    private Template template;
+
+
+    public Template getTemplate() {
+        return template;
+    }
+
+    public void setTemplate(Template template) {
+        this.template = template;
+    }
 
     public Datasources getDatasources() {
         return datasources;

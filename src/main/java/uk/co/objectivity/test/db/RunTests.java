@@ -47,25 +47,39 @@ public class RunTests {
     private static final String PROP_FILTER_EXCLUDE = "filterExclude";
 
     private static String TEST_DIR = "test-definitions";
-    private static final String CONFIG_FILE_NAME = "/cmpSqlResults-config.xml";
+    private static final String CONFIG_FILE_NAME = "/cmpSqlResults-config-my.xml";
     private static String MAIN_CONFIG_FILE_PATH = TEST_DIR + CONFIG_FILE_NAME;
+    private static final String TEMPLATES_DIR_NAME = "/template";
+    private static String MAIN_TEMPLATES_DIR_PATH = TEST_DIR + TEMPLATES_DIR_NAME;
 
     public static void main(String[] args) {
-        displayHelpMessage();
-        String testDir = System.getProperty(PROP_TESTS_DIR);
-        if (testDir != null) {
-            TEST_DIR = testDir;
-            MAIN_CONFIG_FILE_PATH = testDir + CONFIG_FILE_NAME;
-        }
+        try {
+            displayHelpMessage();
+            String testDir = System.getProperty(PROP_TESTS_DIR);
+            if (testDir != null) {
+                TEST_DIR = testDir;
+                MAIN_CONFIG_FILE_PATH = testDir + CONFIG_FILE_NAME;
+                MAIN_TEMPLATES_DIR_PATH = testDir + TEMPLATES_DIR_NAME;
+            }
 
-        CmpSqlResultsConfig cmpSqlResultsConfig = readConfigAndInit();
-        if (cmpSqlResultsConfig == null) return;
+            CmpSqlResultsConfig cmpSqlResultsConfig = readConfigAndInit();
+            if (cmpSqlResultsConfig == null)
+                return;
 
-        // we do not need to validate cmpSqlResultsConfig.getThreads() - thanks to JAXB and TestNG
-        runTestNG(cmpSqlResultsConfig.getThreads(), cmpSqlResultsConfig.getFilter());
+            if (cmpSqlResultsConfig.getTemplate().isReplaceOn()) {
+                GenerateXMLFromTemplate.replaceCharactor();
+            }
 
-        if (!DBTestCompare.ALL_TESTS_SUCCEEDED) {
-            System.exit(cmpSqlResultsConfig.getTestFailureExitCode());
+            // we do not need to validate cmpSqlResultsConfig.getThreads() - thanks to JAXB
+            // and TestNG
+            runTestNG(cmpSqlResultsConfig.getThreads(), cmpSqlResultsConfig.getFilter());
+
+            if (!DBTestCompare.ALL_TESTS_SUCCEEDED) {
+                System.exit(cmpSqlResultsConfig.getTestFailureExitCode());
+            }
+        } catch (Exception e) {
+            log.error("error:" + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -82,8 +96,18 @@ public class RunTests {
             log.error("Errors while reading configuration file: " + MAIN_CONFIG_FILE_PATH);
             return null;
         }
-        log.debug("Number of Threads set in configuration: " + cmpSqlResultsConfig.getThreads());
-        log.debug("Initializing all components ...");
+        log.debug("template replaceOn setting in  configuration: \"" + cmpSqlResultsConfig.getTemplate().isReplaceOn()
+                + "\" ");
+        if (cmpSqlResultsConfig.getTemplate().isReplaceOn()) {
+            File templatesDirFile = new File(MAIN_TEMPLATES_DIR_PATH);
+            if (!templatesDirFile.exists()) {
+                log.error("templates directory does not exists! Please create directory: "
+                        + templatesDirFile.getAbsolutePath());
+                return null;
+            }
+            GenerateXMLFromTemplate.init(templatesDirFile, cmpSqlResultsConfig);
+        }
+
         DataSource.init(cmpSqlResultsConfig.getDatasources()); // it also adds shutdown hook (closing connections)
         TestDataProvider.init(testsDirFile, cmpSqlResultsConfig);
         Printer.init(cmpSqlResultsConfig);
@@ -92,10 +116,10 @@ public class RunTests {
 
     private static void runTestNG(int threadCount, Filter filter) {
         TestNG testng = new TestNG();
-        testng.setTestClasses(new Class[]{DBTestCompare.class});
+        testng.setTestClasses(new Class[] { DBTestCompare.class });
         String suiteName = "Compare SQL results suite";
-        if (filter != null && ((filter.getIncludes() != null && !filter.getIncludes().isEmpty()) || (filter.getExcludes()
-                != null && !filter.getExcludes().isEmpty()))) {
+        if (filter != null && ((filter.getIncludes() != null && !filter.getIncludes().isEmpty())
+                || (filter.getExcludes() != null && !filter.getExcludes().isEmpty()))) {
             suiteName = "FILTERED compare SQL results suite";
         }
         testng.setDefaultSuiteName(suiteName);
@@ -127,6 +151,7 @@ public class RunTests {
                 cmpSqlResultsConfig.getFilter().setExcludesString(filterExc);
             }
             cmpSqlResultsConfig.getFilter().trim();
+            cmpSqlResultsConfig.getTemplate().filter();
             return cmpSqlResultsConfig;
         } catch (JAXBException e) {
             log.error(e);
